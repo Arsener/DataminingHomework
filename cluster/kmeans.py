@@ -90,13 +90,12 @@ def main():
 
     for name in ['instr', 'instr-class']:
         pd_instr = pd.DataFrame(
-            [[key] + [dict(df[model.labels_ == i][name].value_counts())[key] / value for i in range(3)] for key, value in
+            [[key] + [dict(df[model.labels_ == i][name].value_counts())[key] / value for i in range(3)] for key, value
+             in
              dict(df[name].value_counts()).items()])
         pd_instr.columns = [name, 'clsuter0', 'cluster1', 'cluster2']
         # pd_instr.to_csv(os.path.join('data', '{}_result.csv'.format(name)), index=False)
 
 
-
 if __name__ == '__main__':
     main()
-
