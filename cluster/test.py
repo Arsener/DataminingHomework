@@ -1,4 +1,4 @@
 import numpy as np
 
-early_stop = 1e-8
-print(early_stop + 1)
+a = [1, 3, 4]
+print(str(a)[0])
