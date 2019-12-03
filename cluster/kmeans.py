@@ -59,16 +59,44 @@ def visualized(data, labels, c):
     plt.show()
 
 
+def combine(a, b):
+    return str(a) + '-' + str(b)
+
+
 def main():
+    colors = ['r', 'g', 'b']
     # 获取数据
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
-    data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
+    x = ['difficulty'] + ['Q' + str(i) for i in range(1, 29)]
+    data = df[x]
     # compare_cluster_results(data, pca=True)
 
     model = get_cluster_result(data, n_clusters=3, pca=True)
-    # visualized(data, model.labels_, c=['r', 'g', 'b'])
+    # visualized(data, model.labels_, c=colors)
+
+    df['instr-class'] = list(map(lambda a, b: combine(a, b), df['instr'], df['class']))
+    plt.figure(figsize=(13, 4))
+    for i in range(3):
+        plt.plot(x, np.mean(np.array(data[model.labels_ == i]), axis=0),
+                 marker=".", c=colors[i], label='cluster{}'.format(i))
+
+    plt.xlabel("Question")
+    plt.ylabel("Average score")
+
+    plt.legend(loc='best')
+    # plt.savefig(os.path.join('figs', 'average_score_in_different_clusters.png'))
+    plt.show()
+
+    for name in ['instr', 'instr-class']:
+        pd_instr = pd.DataFrame(
+            [[key] + [dict(df[model.labels_ == i][name].value_counts())[key] / value for i in range(3)] for key, value in
+             dict(df[name].value_counts()).items()])
+        pd_instr.columns = [name, 'clsuter0', 'cluster1', 'cluster2']
+        # pd_instr.to_csv(os.path.join('data', '{}_result.csv'.format(name)), index=False)
+
 
 
 if __name__ == '__main__':
     main()
+
