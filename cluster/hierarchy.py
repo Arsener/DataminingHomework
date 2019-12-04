@@ -10,12 +10,14 @@ from sklearn.metrics import silhouette_score
 
 def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
     if pca:
+        if n_components >= 1:
+            n_components = int(n_components)
         data = PCA(n_components=n_components).fit_transform(data)
 
     # 记录不同类数的轮廓系数结果
     x_label_silhouette_score = []
     y_label_silhouette_score = []
-    for n_clusters in range(2, max_clusters):
+    for n_clusters in range(2, max_clusters + 1):
         model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward').fit(data)
         # 计算轮廓系数
         silhouette_avg = silhouette_score(data, model.labels_, metric='euclidean')
@@ -31,10 +33,12 @@ def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
 
 def get_cluster_result(data, n_clusters=2, pca=False, n_components=0.9):
     if pca:
+        if n_components >= 1:
+            n_components = int(n_components)
         data = PCA(n_components=n_components).fit_transform(data)
 
     model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward').fit(data)
-    return model
+    return model, data
 
 
 def visualized(data, labels, c):
@@ -53,10 +57,12 @@ def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
-    compare_cluster_results(data, pca=True)
+    # compare_cluster_results(data, pca=True)
 
-    model = get_cluster_result(data, n_clusters=2, pca=True)
-    # visualized(data, model.labels_, c=['r', 'b'])
+    model, data_for_cluster = get_cluster_result(data, n_clusters=2, pca=True)
+    silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
+    print(silhouette_avg)
+    # visualized(data_for_cluster, model.labels_, c=['r', 'b'])
 
 
 if __name__ == '__main__':
