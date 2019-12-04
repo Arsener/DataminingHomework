@@ -8,28 +8,31 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
 
-# 比较簇数量不同时的轮廓系数
-def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
-    # 通过设置pca参数比较降维对聚类结果的影响，默认设置n_components=0.9，即保留90%的信息
-    if pca:
-        if n_components >= 1:
-            n_components = int(n_components)
-        data = PCA(n_components=n_components).fit_transform(data)
-
+# 比较簇数量不同时以及是否降维时的轮廓系数。默认设置PCA的参数n_components=0.9，即保留90%的信息
+def compare_cluster_results(data, max_clusters=10, n_components=0.9):
     # 记录不同类数的轮廓系数结果
-    x_label_silhouette_score = []
-    y_label_silhouette_score = []
-    for n_clusters in range(2, max_clusters + 1):
-        model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward').fit(data)
-        # 计算轮廓系数
-        silhouette_avg = silhouette_score(data, model.labels_, metric='euclidean')
-        x_label_silhouette_score.append(n_clusters)
-        y_label_silhouette_score.append(silhouette_avg)
+    x_label_silhouette_score = [[], []]
+    y_label_silhouette_score = [[], []]
 
-    plt.plot(x_label_silhouette_score, y_label_silhouette_score, marker="o")
+    for i in range(2):
+        if i == 1:
+            if n_components >= 1:
+                n_components = int(n_components)
+            data = PCA(n_components=n_components).fit_transform(data)
+
+        for n_clusters in range(2, max_clusters + 1):
+            model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward').fit(data)
+            # 计算轮廓系数
+            silhouette_avg = silhouette_score(data, model.labels_, metric='euclidean')
+            x_label_silhouette_score[i].append(n_clusters)
+            y_label_silhouette_score[i].append(silhouette_avg)
+
+    plt.plot(x_label_silhouette_score[0], y_label_silhouette_score[0], marker="o", c='r', label='without PCA')
+    plt.plot(x_label_silhouette_score[1], y_label_silhouette_score[1], marker="o", c='b', label='with PCA')
     plt.xlabel("The number of clusters")
     plt.ylabel("Silhouette coefficient")
-    plt.savefig(os.path.join('figs', 'hierarchy_sil_pca_{}.png'.format(str(pca))))
+    plt.legend(loc='best')
+    plt.savefig(os.path.join('figs', 'hierarchy_sil.png'))
     plt.show()
 
 
@@ -70,13 +73,13 @@ def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
-    compare_cluster_results(data, pca=True)
+    compare_cluster_results(data)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=2, pca=True)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
-    visualized(data_for_cluster, model.labels_, c=['r', 'b'])
+    # visualized(data_for_cluster, model.labels_, c=['r', 'b'])
 
 
 if __name__ == '__main__':

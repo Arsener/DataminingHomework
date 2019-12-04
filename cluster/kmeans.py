@@ -8,40 +8,45 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 
-# 比较簇数量不同时的SSE和轮廓系数
-def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
-    # 通过设置pca参数比较降维对聚类结果的影响，默认设置n_components=0.9，即保留90%的信息
-    if pca:
-        if n_components >= 1:
-            n_components = int(n_components)
-        data = PCA(n_components=n_components).fit_transform(data)
+# 比较簇数量不同时以及是否降维时的SSE和轮廓系数。默认设置PCA的参数n_components=0.9，即保留90%的信息
+def compare_cluster_results(data, max_clusters=10, n_components=0.9):
+    # 记录不同类数的SSE和轮廓系数结果
+    x_label_silhouette_score = [[], []]
+    y_label_silhouette_score = [[], []]
+    x_label_SSE = [[], []]
+    y_label_SSE = [[], []]
 
-    # 记录不同类数的轮廓系数结果
-    x_label_silhouette_score = []
-    y_label_silhouette_score = []
+    for i in range(2):
+        if i == 1:
+            if n_components >= 1:
+                n_components = int(n_components)
+            data = PCA(n_components=n_components).fit_transform(data)
 
-    # 记录不同类数的SSE结果
-    model = KMeans(n_clusters=1, init='random', n_init=10).fit(data)
-    x_label_SSE = [1]
-    y_label_SSE = [model.inertia_]
-    for n_clusters in range(2, max_clusters + 1):
-        model = KMeans(n_clusters=n_clusters, init='random', n_init=10).fit(data)
-        # 计算轮廓系数
-        silhouette_avg = silhouette_score(data, model.labels_, metric='euclidean')
-        x_label_silhouette_score.append(n_clusters)
-        y_label_silhouette_score.append(silhouette_avg)
-        x_label_SSE.append(n_clusters)
-        y_label_SSE.append(model.inertia_)
+        model = KMeans(n_clusters=1, init='random', n_init=10).fit(data)
+        x_label_SSE[i].append(1)
+        y_label_SSE[i].append(model.inertia_)
+        for n_clusters in range(2, max_clusters + 1):
+            model = KMeans(n_clusters=n_clusters, init='random', n_init=10).fit(data)
+            # 计算轮廓系数
+            silhouette_avg = silhouette_score(data, model.labels_, metric='euclidean')
+            x_label_silhouette_score[i].append(n_clusters)
+            y_label_silhouette_score[i].append(silhouette_avg)
+            x_label_SSE[i].append(n_clusters)
+            y_label_SSE[i].append(model.inertia_)
 
-    plt.plot(x_label_SSE, y_label_SSE, marker="o")
+    plt.plot(x_label_SSE[0], y_label_SSE[0], marker="o", c='r', label='without PCA')
+    plt.plot(x_label_SSE[1], y_label_SSE[1], marker="o", c='b', label='with PCA')
     plt.xlabel("The number of clusters")
     plt.ylabel("SSE")
-    plt.savefig(os.path.join('figs', 'kmeans_sse_pca_{}.png'.format(str(pca))))
+    plt.legend(loc='best')
+    plt.savefig(os.path.join('figs', 'kmeans_sse.png'))
     plt.show()
-    plt.plot(x_label_silhouette_score, y_label_silhouette_score, marker="o")
+    plt.plot(x_label_silhouette_score[0], y_label_silhouette_score[0], marker="o", c='r', label='without PCA')
+    plt.plot(x_label_silhouette_score[1], y_label_silhouette_score[1], marker="o", c='b', label='with PCA')
     plt.xlabel("The number of clusters")
     plt.ylabel("Silhouette coefficient")
-    plt.savefig(os.path.join('figs', 'kmeans_sil_pca_{}.png'.format(str(pca))))
+    plt.legend(loc='best')
+    plt.savefig(os.path.join('figs', 'kmeans_sil.png'))
     plt.show()
 
 
@@ -112,13 +117,13 @@ def main():
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     x = ['difficulty'] + ['Q' + str(i) for i in range(1, 29)]
     data = df[x]
-    compare_cluster_results(data, pca=True)
+    compare_cluster_results(data)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=3, pca=True)
 
     colors = ['r', 'g', 'b']
-    visualized(data_for_cluster, model.labels_, c=colors)
-    data_analysis(df, model.labels_, data, x, colors)
+    # visualized(data_for_cluster, model.labels_, c=colors)
+    # data_analysis(df, model.labels_, data, x, colors)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
