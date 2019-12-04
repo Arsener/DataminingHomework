@@ -8,7 +8,9 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
 
+# 比较簇数量不同时的轮廓系数
 def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
+    # 通过设置pca参数比较降维对聚类结果的影响，默认设置n_components=0.9，即保留90%的信息
     if pca:
         if n_components >= 1:
             n_components = int(n_components)
@@ -27,10 +29,11 @@ def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
     plt.plot(x_label_silhouette_score, y_label_silhouette_score, marker="o")
     plt.xlabel("The number of clusters")
     plt.ylabel("Silhouette coefficient")
-    # plt.savefig(os.path.join('figs', 'hierarchy_sil_pca_{}.png'.format(str(pca))))
+    plt.savefig(os.path.join('figs', 'hierarchy_sil_pca_{}.png'.format(str(pca))))
     plt.show()
 
 
+# 得到聚类结果以及用于聚类的数据
 def get_cluster_result(data, n_clusters=2, pca=False, n_components=0.9):
     if pca:
         if n_components >= 1:
@@ -41,6 +44,7 @@ def get_cluster_result(data, n_clusters=2, pca=False, n_components=0.9):
     return model, data
 
 
+# 可视化
 def visualized(data, labels, c):
     tsne = TSNE(n_components=2, metric='euclidean', init='pca')
     tsne_2d = tsne.fit_transform(data)
@@ -66,13 +70,13 @@ def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
-    # compare_cluster_results(data, pca=True)
+    compare_cluster_results(data, pca=True)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=2, pca=True)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
-    # visualized(data_for_cluster, model.labels_, c=['r', 'b'])
+    visualized(data_for_cluster, model.labels_, c=['r', 'b'])
 
 
 if __name__ == '__main__':

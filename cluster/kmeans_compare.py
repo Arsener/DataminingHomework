@@ -2,17 +2,12 @@ import os
 import time
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def k_means(points, n_clusters, max_iter=300, tol=1e-8):
-    # 设置若中心点移动距离不大提前停止
-
     # 将数据转化为浮点数数组
     points = np.array(points, dtype=np.float64)
     # 获取维度以及每个特征的取值范围
@@ -26,17 +21,19 @@ def k_means(points, n_clusters, max_iter=300, tol=1e-8):
     for i in range(max_iter):
         clusters = np.array([np.argmin(np.linalg.norm(centers - p, axis=1)) for p in points])
         old_centers = np.array(centers)
+        # 计算新的中心点
         for j in range(n_clusters):
             points_in_cluster_j = points[clusters == j]
             centers[j] = np.mean(points_in_cluster_j, axis=0)
 
+        # 若中心点位置变化不大则提前停止
         if np.sum(np.linalg.norm(old_centers - centers, axis=1) < tol):
             break
-
 
     return clusters
 
 
+# 使用两种不同的kmeans算法得到聚类结果
 def get_labels(i, data, n_cluster):
     if i == 0:
         return k_means(data, n_clusters=n_cluster)
@@ -44,6 +41,7 @@ def get_labels(i, data, n_cluster):
         return KMeans(n_clusters=n_cluster, init='random', n_init=10).fit(data).labels_
 
 
+# 计算SSE
 def calc_sse(data, labels):
     data = np.array(data, dtype=np.float64)
     n_clusters = set(labels)
@@ -52,6 +50,7 @@ def calc_sse(data, labels):
                 for i in n_clusters])
 
 
+# 画出折线图
 def draw(x, y, y_label):
     colors = ['r', 'b']
     label = ['self implement', 'sklearn']
@@ -65,10 +64,12 @@ def draw(x, y, y_label):
     plt.savefig(os.path.join('figs', '{}.png'.format(y_label)))
     plt.show()
 
+
 def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
 
+    # 分别记录两种算法的聚类结果相关信息
     time_list = [[], []]
     sse_list = [[], []]
     sil_list = [[], []]
@@ -82,10 +83,11 @@ def main():
                 st = time.time()
                 labels = get_labels(i, data, n_clusters)
                 ed = time.time()
+                # 计算耗时
                 time_cost.append((ed - st))
                 sse.append(calc_sse(data, labels))
-                if n_clusters > 1:
-                    sil.append(silhouette_score(data, labels, metric='euclidean'))
+                sil.append(silhouette_score(data, labels, metric='euclidean'))
+            # 计算十次的平均值
             time_list[i].append(np.average(time_cost))
             sse_list[i].append(np.average(sse))
             sil_list[i].append(np.average(sil))
@@ -94,8 +96,6 @@ def main():
     draw(x, time_list, 'Time(s)')
     draw(x, sse_list, 'SSE')
     draw(x, sil_list, 'Silhouette Coefficient')
-
-    print(time_list, sse_list, sil_list)
 
 
 if __name__ == '__main__':

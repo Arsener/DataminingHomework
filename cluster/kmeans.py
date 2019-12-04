@@ -8,7 +8,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 
+# 比较簇数量不同时的SSE和轮廓系数
 def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
+    # 通过设置pca参数比较降维对聚类结果的影响，默认设置n_components=0.9，即保留90%的信息
     if pca:
         if n_components >= 1:
             n_components = int(n_components)
@@ -18,6 +20,7 @@ def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
     x_label_silhouette_score = []
     y_label_silhouette_score = []
 
+    # 记录不同类数的SSE结果
     model = KMeans(n_clusters=1, init='random', n_init=10).fit(data)
     x_label_SSE = [1]
     y_label_SSE = [model.inertia_]
@@ -33,15 +36,16 @@ def compare_cluster_results(data, max_clusters=10, pca=False, n_components=0.9):
     plt.plot(x_label_SSE, y_label_SSE, marker="o")
     plt.xlabel("The number of clusters")
     plt.ylabel("SSE")
-    # plt.savefig(os.path.join('figs', 'kmeans_sse_pca_{}.png'.format(str(pca))))
+    plt.savefig(os.path.join('figs', 'kmeans_sse_pca_{}.png'.format(str(pca))))
     plt.show()
     plt.plot(x_label_silhouette_score, y_label_silhouette_score, marker="o")
     plt.xlabel("The number of clusters")
     plt.ylabel("Silhouette coefficient")
-    # plt.savefig(os.path.join('figs', 'kmeans_sil_pca_{}.png'.format(str(pca))))
+    plt.savefig(os.path.join('figs', 'kmeans_sil_pca_{}.png'.format(str(pca))))
     plt.show()
 
 
+# 得到聚类结果以及用于聚类的数据
 def get_cluster_result(data, n_clusters=2, pca=False, n_components=0.9):
     if pca:
         if n_components >= 1:
@@ -52,6 +56,7 @@ def get_cluster_result(data, n_clusters=2, pca=False, n_components=0.9):
     return model, data
 
 
+# 可视化
 def visualized(data, labels, c):
     tsne = TSNE(n_components=2, metric='euclidean', init='pca')
     tsne_2d = tsne.fit_transform(data)
@@ -63,11 +68,14 @@ def visualized(data, labels, c):
     plt.show()
 
 
+# 进行数据分析
 def data_analysis(df, labels, data, x, colors):
+    # 添加一列，内容为：教师编号-课程编号
     def combine(a, b):
         return str(a) + '-' + str(b)
 
     df['instr-class'] = list(map(lambda a, b: combine(a, b), df['instr'], df['class']))
+    # 统计每一簇中每个问题的平均分数，并绘出折线图
     plt.figure(figsize=(13, 4))
     for i in range(3):
         plt.plot(x, np.mean(np.array(data[labels == i]), axis=0),
@@ -75,11 +83,11 @@ def data_analysis(df, labels, data, x, colors):
 
     plt.xlabel("Question")
     plt.ylabel("Average score")
-
     plt.legend(loc='best')
     plt.savefig(os.path.join('figs', 'average_score_in_different_clusters.png'))
     plt.show()
 
+    # 统计每个老师（课程）的学生在每个簇中占的比例
     for name in ['instr', 'instr-class']:
         pd_instr = pd.DataFrame(
             [[key] + [dict(df[labels == i][name].value_counts())[key] / value for i in range(3)] for key, value
@@ -104,13 +112,13 @@ def main():
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     x = ['difficulty'] + ['Q' + str(i) for i in range(1, 29)]
     data = df[x]
-    # compare_cluster_results(data, pca=True)
+    compare_cluster_results(data, pca=True)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=3, pca=True)
 
-    # colors = ['r', 'g', 'b']
-    # visualized(data_for_cluster, model.labels_, c=colors)
-    # data_analysis(df, model.labels_, data, x, colors)
+    colors = ['r', 'g', 'b']
+    visualized(data_for_cluster, model.labels_, c=colors)
+    data_analysis(df, model.labels_, data, x, colors)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
