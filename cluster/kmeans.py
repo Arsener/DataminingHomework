@@ -117,16 +117,16 @@ def main():
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     x = ['difficulty'] + ['Q' + str(i) for i in range(1, 29)]
     data = df[x]
-    compare_cluster_results(data)
+    # compare_cluster_results(data)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=3, pca=True)
 
     colors = ['r', 'g', 'b']
-    # visualized(data_for_cluster, model.labels_, c=colors)
-    # data_analysis(df, model.labels_, data, x, colors)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
+    # visualized(data_for_cluster, model.labels_, c=colors)
+    # data_analysis(df, model.labels_, data, x, colors)
 
 
 if __name__ == '__main__':

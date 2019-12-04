@@ -73,7 +73,7 @@ def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
-    compare_cluster_results(data)
+    # compare_cluster_results(data)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=2, pca=True)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
