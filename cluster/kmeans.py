@@ -90,7 +90,7 @@ def data_analysis(df, labels, data, x, colors):
 
 
 # 计算SSE
-def sse(data, labels):
+def calc_sse(data, labels):
     data = np.array(data, dtype=np.float64)
     n_clusters = set(labels)
     centers = np.array([np.mean(data[labels == i], axis=0) for i in n_clusters])
@@ -107,13 +107,14 @@ def main():
     # compare_cluster_results(data, pca=True)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=3, pca=True)
-    silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
-    print(silhouette_avg)
 
     # colors = ['r', 'g', 'b']
     # visualized(data_for_cluster, model.labels_, c=colors)
     # data_analysis(df, model.labels_, data, x, colors)
-    print(sse(data_for_cluster, model.labels_))
+    silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
+    sse = calc_sse(data_for_cluster, model.labels_)
+    print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
+
 
 if __name__ == '__main__':
     main()
