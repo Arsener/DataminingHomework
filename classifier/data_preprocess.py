@@ -34,7 +34,7 @@ def main():
     # 对job进行one-hot编码（客户的职业）
     data = one_hot(data, df, 'job')
     # 将marital替换为数字（婚姻状况）
-    marital_dict = {'single': -1, 'married': 0, 'divorced': 1}
+    marital_dict = {'divorced': -1, 'single': 0, 'married': 1}
     replace(data, df, 'marital', marital_dict)
     # 将education替换为数字（受教育水平）
     education_dict = {'unknown': 0, 'primary': 1, 'secondary': 2, 'tertiary': 3}
@@ -55,10 +55,11 @@ def main():
     replace(data, df, 'contact', contact_dict)
     # 对day进行归一化（最后一次联系的时间（几号））
     normalized(data, df, 'day')
-    # 将month替换为数字（最后一次联系的时间（月份））
+    # 将month替换为数字（最后一次联系的时间（月份））并归一化
     month_dict = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
                   'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
     replace(data, df, 'month', month_dict)
+    normalized(data, data, 'month')
     # 对duration进行归一化（最后一次联系的交流时长）
     normalized(data, df, 'duration')
     # 对campaign进行归一化（在本次活动中，与该客户交流过的次数）

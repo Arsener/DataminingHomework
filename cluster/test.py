@@ -5,7 +5,7 @@ m = len(p)
 delta = [[] for i in range(m + 1)]
 
 for a in alpha:
-    if a == p[0]:
+    if a == p[1]:
         delta[0].append(1)
     else:
         delta[0].append(0)
@@ -15,12 +15,6 @@ for q in range(1, m + 1):
         if q == m or p[q] != alpha[a]:
             delta[q].append(delta[pi[q - 1]][a])
         else:
-            # index = -1
-            # for i in range(len(alpha)):
-            #     if alpha[i] == p[q - 1]:
-            #         index = i
-            #         break
-
             delta[q].append(q + 1)
 
 for i in delta:
