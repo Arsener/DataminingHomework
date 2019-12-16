@@ -54,6 +54,7 @@ def calc_sse(data, labels):
 def draw(x, y, y_label):
     colors = ['r', 'b']
     label = ['self implement', 'sklearn']
+    plt.figure(figsize=(3.5, 2.5))
     for i in range(2):
         plt.plot(x, y[i], marker=".", c=colors[i], label=label[i])
 

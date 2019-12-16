@@ -27,8 +27,9 @@ def compare_cluster_results(data, max_clusters=10, n_components=0.9):
             x_label_silhouette_score[i].append(n_clusters)
             y_label_silhouette_score[i].append(silhouette_avg)
 
-    plt.plot(x_label_silhouette_score[0], y_label_silhouette_score[0], marker="o", c='r', label='without PCA')
-    plt.plot(x_label_silhouette_score[1], y_label_silhouette_score[1], marker="o", c='b', label='with PCA')
+    plt.figure(figsize=(3.5, 2.5))
+    plt.plot(x_label_silhouette_score[0], y_label_silhouette_score[0], marker=".", c='r', label='without PCA')
+    plt.plot(x_label_silhouette_score[1], y_label_silhouette_score[1], marker=".", c='b', label='with PCA')
     plt.xlabel("The number of clusters")
     plt.ylabel("Silhouette coefficient")
     plt.legend(loc='best')
@@ -52,6 +53,7 @@ def visualized(data, labels, c):
     tsne = TSNE(n_components=2, metric='euclidean', init='pca')
     tsne_2d = tsne.fit_transform(data)
 
+    # plt.figure(figsize=(3.5, 2.5))
     for i in range(len(c)):
         cluster_i = tsne_2d[[l[0] for l in np.argwhere(labels == i)]]
         plt.scatter(cluster_i[:, 0], cluster_i[:, 1], c=c[i], marker='.')
@@ -73,13 +75,13 @@ def main():
     df = pd.read_csv(os.path.join('data', 'data.csv'))
     # 选择输入的字段：课程的难度difficulty以及28个问题Q1-Q28
     data = df[['difficulty'] + ['Q' + str(i) for i in range(1, 29)]]
-    # compare_cluster_results(data)
+    compare_cluster_results(data)
 
     model, data_for_cluster = get_cluster_result(data, n_clusters=2, pca=True)
     silhouette_avg = silhouette_score(data_for_cluster, model.labels_, metric='euclidean')
     sse = calc_sse(data_for_cluster, model.labels_)
     print('Silhouette Coefficient: {}\nSSE: {}'.format(silhouette_avg, sse))
-    # visualized(data_for_cluster, model.labels_, c=['r', 'b'])
+    visualized(data_for_cluster, model.labels_, c=['r', 'b'])
 
 
 if __name__ == '__main__':
